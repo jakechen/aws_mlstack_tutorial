@@ -82,6 +82,7 @@ Resources:
         }
       RoleArn: WORK-IN-PROGRESS
   MLStackDemoTrainTrigger:
+    Comment: Kicks off training pipeline in Step Functions
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python2.7
