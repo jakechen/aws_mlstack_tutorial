@@ -12,7 +12,9 @@ Description: |
   5. MLStackDemoTrain - fits model and stores the model in S3
   6. MLStackDemoPredict - uses stored model and predicts incoming record
 Resources:
-  # Define Roles
+  # --------------------
+  # IAM Roles
+  # --------------------
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -35,6 +37,9 @@ Resources:
             Action:
             - logs:*
             Resource: arn:aws:logs:*:*:*
+  # --------------------
+  # Step Functions
+  # --------------------
   MLStackDemoTrain:
     Type: AWS::StepFunctions::StateMachine
     Properties:
@@ -45,14 +50,14 @@ Resources:
           "States": {
             "DataPrep": {
               "Comment": "Transforms data and stores into S3",
-              "Type": "Task",
-              "Resource": "WORK-IN-PROGRESS"
-              "Next": "TrainStep"
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
+              "Next": "Train"
             },
-            "TrainStep": {
+            "Train": {
               "Comment": "Trains model and stores into S3",
-              "Type": "Task",
-              "Resource": "WORK-IN-PROGRESS"
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
               "End": true
             }
           }
@@ -68,19 +73,22 @@ Resources:
           "States": {
             "DataPrep": {
               "Comment": "Transforms record and stores into S3",
-              "Type": "Task",
-              "Resource": "WORK-IN-PROGRESS"
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
               "Next": "PredictStep"
             },
             "PredictStep": {
               "Comment": "Predicts record and stores into S3",
-              "Type": "Task",
-              "Resource": "WORK-IN-PROGRESS"
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
               "End": true
             }
           }
         }
       RoleArn: WORK-IN-PROGRESS
+  # --------------------
+  # Lambda Function
+  # --------------------
   MLStackDemoTrainTrigger:
     Comment: Kicks off training pipeline in Step Functions
     Type: AWS::Lambda::Function
@@ -100,6 +108,9 @@ Resources:
       Code:
         S3Bucket: "jakechenawspublic"
         S3Key: "tutorials/mlstack_demo/scripts/predict_trigger.zip"
+  # --------------------
+  # Batch Jobs
+  # --------------------
   MLStackDemoPrep:
     Type: AWS::Lambda::Function
     Properties:
