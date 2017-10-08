@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: '2017-03-23'
+Description: |
+  # This template generates 2 step functions, 2 trigger lambdas, and 3 task lambdas.
+  ## Step functions
+  1. MLStackDemoTrain
+  2. MLStackDemoPredict
+  ## Trigger lambdas
+  1. MLStackDemoTrainTrigger - triggers sfn_mlstackdemo_train every week
+  2. MLStackDemoPredictTrigger - triggers sfn_mlstackdemo_predict whenever a new record arrives in s3
+  ## Task lambdas
+  4. MLStackDemoPrep - (optional) transforms data using existing transformation (e.g. PCA) and stores transformed data in S3
+  5. MLStackDemoTrain - fits model and stores the model in S3
+  6. MLStackDemoPredict - uses stored model and predicts incoming record
+Resources:
+  # --------------------
+  # IAM Roles
+  # --------------------
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+  # --------------------
+  # Step Functions
+  # --------------------
+  MLStackDemoTrain:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: |-
+        {
+          "Comment": "Training Pipeline",
+          "StartAt": "DataPrep",
+          "States": {
+            "DataPrep": {
+              "Comment": "Transforms data and stores into S3",
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
+              "Next": "Train"
+            },
+            "Train": {
+              "Comment": "Trains model and stores into S3",
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
+              "End": true
+            }
+          }
+        }
+      RoleArn: WORK-IN-PROGRESS
+  MLStackDemoPredict:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString: |-
+        {
+          "Comment": "Prediction Pipeline",
+          "StartAt": "DataPrep",
+          "States": {
+            "DataPrep": {
+              "Comment": "Transforms record and stores into S3",
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
+              "Next": "PredictStep"
+            },
+            "PredictStep": {
+              "Comment": "Predicts record and stores into S3",
+              "Type": "Pass",
+              "Resource": "WORK-IN-PROGRESS",
+              "End": true
+            }
+          }
+        }
+      RoleArn: WORK-IN-PROGRESS
+  # --------------------
+  # Lambda Function
+  # --------------------
+  MLStackDemoTrainTrigger:
+    Comment: Kicks off training pipeline in Step Functions
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python2.7
+      Handler: lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: "jakechenawspublic"
+        S3Key: "tutorials/mlstack_demo/scripts/train_trigger.zip"
+  MLStackDemoPredictTrigger:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python2.7
+      Handler: lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: "jakechenawspublic"
+        S3Key: "tutorials/mlstack_demo/scripts/predict_trigger.zip"
+  # --------------------
+  # Batch Jobs
+  # --------------------
+  MLStackDemoPrep:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python2.7
+      Handler: lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: "jakechenawspublic"
+        S3Key: "tutorials/mlstack_demo/scripts/prep.zip"
+  MLStackDemoTrain:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python2.7
+      Handler: lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: "jakechenawspublic"
+        S3Key: "tutorials/mlstack_demo/scripts/train.zip"
+  MLStackDemoPredict:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python2.7
+      Handler: lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: "jakechenawspublic"
+        S3Key: "tutorials/mlstack_demo/scripts/predict.zip"
