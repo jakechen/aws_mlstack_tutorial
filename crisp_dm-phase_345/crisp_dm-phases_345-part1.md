@@ -1,8 +1,13 @@
+# Initializing and connecting to Jupyter Notebook on an EC2 instances
+
 ## Introduction
-This quick guide describes how to create a Jupyter Notebook in AWS EC2 then how to access it remotely using SSH tunneling. This method is not the "officially recommended" method, it is commonly used since it requires little-to-no configuration, no additional ports (besides 22 for ssh) or proxies, and is generally very straight-forward.
+This quick guide describes how to create a Jupyter Notebook in AWS EC2 then how to access it remotely using SSH tunneling. While this method is not the officially recommended method, it is commonly used since it requires little-to-no configuration, no additional ports (besides 22 for ssh) or proxies, and is generally very straight-forward.
 
 ## Pre-requisites
-This current version assumes basic familiarity with cloud computing, specifically AWS EC2, Jupyter Notebook, and introductory Data Science concepts including CRISP-DM methodology.
+This current version assumes basic familiarity:
+- Cloud computing, specifically AWS EC2
+- Jupyter Notebook
+- Introductory Data Science concepts including CRISP-DM methodology.
 
 ## Steps
 ### Spin-up EC2 instance with "Deep Learning" AMI
