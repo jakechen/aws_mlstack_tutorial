@@ -1,7 +1,7 @@
 # Initializing and connecting to Jupyter Notebook on an EC2 instances
 
 ## Introduction
-This quick guide describes how to create a Jupyter Notebook in AWS EC2 then how to access it remotely using SSH tunneling. While this method is not the officially recommended method, it is commonly used since it requires little-to-no configuration, no additional ports (besides 22 for ssh) or proxies, and is generally very straight-forward.
+Welcome to Part1 of this tutorial. This quick guide describes how to initialize a Jupyter Notebook in AWS EC2 and then how to access it remotely using SSH tunneling. While this method is not the officially recommended method, it is commonly used since it requires little-to-no configuration, no additional ports (besides 22 for SSH), or proxies, and is generally very straight-forward.
 
 ## Pre-requisites
 This current version assumes basic familiarity:
@@ -27,6 +27,7 @@ This current version assumes basic familiarity:
 
 ### Tunnel into Notebook
 1. Open up any web browser and point it to http://localhost:8888 .
+2. Now continue the tutorial by opening the 2nd part of this tutorial in Jupyter Notebook, located in `aws_mlstack_tutorial/crispdm345_training/part2.ipynb`
 
 ## Conclusion
-That's it! Remember to spin-down your EC2 instance after you're done with it to minimize costs. "Stop" your instance if you plan on continuing your work, or "Terminate" your instance if you have fully completed this modeling iteration.
+You should now know how to initialize and quickly log into a Jupyter Notebook running on EC2! Remember to spin-down your EC2 instance after this tutorial to minimize costs. "Stop" your instance if you plan on continuing your work later on this instance, or "Terminate" your instance if you are done with the instance (such as after you pushed a successful model to S3).
