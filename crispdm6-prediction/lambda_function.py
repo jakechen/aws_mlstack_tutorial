@@ -31,10 +31,10 @@ s3.download_file(
 )
 
 # Load and run predictions using saved model
-def lambda_handler(event, context)
+def lambda_handler(event, context):
     test_iter = mx.io.CSVIter(
         data_csv = './x_test.csv',
-        data_shape = (5, 1, 28, 28),
+        data_shape = (1, 28, 28),
         label_csv= './y_test.csv',
         label_shape = (5,),
         batch_size = batch_size)
