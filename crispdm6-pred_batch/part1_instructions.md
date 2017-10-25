@@ -8,27 +8,30 @@ First, we need to create a Amazon Machine Image (AMI) that your Docker Container
 
 ## Create and Register Docker Image
 1. Create Dockerfile
-	`FROM amazonlinux
-	RUN yum -y upgrade
-	RUN yum install -y python27-pip
-	RUN yum install -y libgomp
-	RUN pip install mxnet
-	RUN pip install boto3
-	COPY src/part2_pred_script.py /tmp/part2_pred_script.py
-	ENTRYPOINT ["python", "/tmp/part2_pred_script.py"]`
-2. Build Docker Image: `docker build -t mnist_predictor .`
+```
+FROM amazonlinux
+
+RUN yum -y upgrade
+RUN yum install -y python27-pip
+RUN yum install -y libgomp
+RUN pip install mxnet
+RUN pip install boto3
+
+COPY src/part2_pred_script.py /tmp/part2_pred_script.py
+
+ENTRYPOINT ["python", "/tmp/part2_pred_script.py"]
+```
+2. Build Docker Image
+```
+docker build -t mnist_predictor .
+```
 3. Register Docker Image to ECR
 Follow these steps in AWS Console:
 	1. [Open ECS console](https://console.aws.amazon.com/ecs)
 	2. Click Repositories on the left, click "Create Repository"
 	3. Fill out form fields
-	4. Follow directions
+	4. Follow directions out the screen
 	5. Keep a record of the Repository URI
-
-Or use the commands:
-`aws ecr create-repository
-aws ecr get-login --no-include-email --region us-east-1
-`
 
 ## AWS Batch Setup
 1. Create Compute Environment

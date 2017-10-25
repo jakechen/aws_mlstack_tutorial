@@ -69,9 +69,8 @@ aws s3 cp ../lambda.zip s3://jakechenawstemp/
 	aws lambda create-function \
 	--region us-east-1 \
 	--function-name mnist_predictor \
-	--code S3Bucket=jakechenawstemp, S3Key=lambda.zip \ # change this to where you uploaded your zipped Deployment Package
-	--role admin_lambda \ # change this to the role you made
+	--code S3Bucket=jakechenawstemp,S3Key=lambda.zip \ # change this to where you uploaded your zipped Deployment Package
+	--role [LAMBDA ROLE ARN] \ # change this to the role you made
 	--handler lambda_function.lambda_handler \
-	--runtime python2.7 \
-	--profile adminuser 
+	--runtime python2.7
 	```
