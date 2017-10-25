@@ -1,7 +1,7 @@
 # Deploying a Pre-Trained MXNet to AWS Lambda
 The following steps are based on the official Lambda Functions documentation, specifically [Create Deployment Package Using a Python Environment Created with Virtualenv](http://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html#deployment-pkg-for-virtualenv)
 
-## Pre-requisites
+## Gotchas
 - unzipped needs to be within 240MB
 - best to cd into the directory, then zip -r -9 ../lambda.zip *
 - remember your .py script name and the function inside
@@ -15,9 +15,12 @@ The following steps are based on the official Lambda Functions documentation, sp
 3. SSH into this instance as normal
 
 ### Install required libraries script
-1. Create the Python environment using `virtualenv ~/mxnet`
+1. Create the Python environment using
+```
+virtualenv ~/mxnet
+```
 2. Activate the environment using `source ~/mxnet/bin/activate`
-3. Install MXNet into this environment using `pip install mxnet`
+3. Install MXNet into this environment using `pip install mxnet boto3`
 
 ### Author and test prediction script
 1. Create your project directory, such as:
@@ -25,7 +28,7 @@ The following steps are based on the official Lambda Functions documentation, sp
 	2. `touch ~/lambda/lambda_function.py`
 2. Write your Lambda function
 	1. In this tutorial, simply copy the prediction script part2_pred_script.py
-3. Run your function and confirm it works before moving on
+3. Run your function and confirm it works before moving on using `python ~/lambda/lambda_function.py`
 
 ## Create Deployment Packages
 1. Move packages into the same directory as your script, such as:
@@ -39,3 +42,4 @@ The following steps are based on the official Lambda Functions documentation, sp
 
 ## Create Lambda Function
 1. In AWS Console, create a new Lambda Function and point to your zip in S3
+	1. 
