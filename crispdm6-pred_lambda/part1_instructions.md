@@ -16,9 +16,9 @@ The following steps are based on the official Lambda Functions documentation, sp
 
 ### Install required libraries script
 1. Create the Python environment using
-```
-virtualenv ~/mxnet
-```
+	```
+	virtualenv ~/mxnet
+	```
 2. Activate the environment using `source ~/mxnet/bin/activate`
 3. Install MXNet into this environment using `pip install mxnet boto3`
 
