@@ -47,17 +47,31 @@ python ~/lambda/lambda_function.py
 cp -r ~/mxnet/lib/python2.7/site-packages/* ~/lambda/
 cp -r ~/mxnet/lib64/python2.7/site-packages/* ~/lambda/
 ```
-2. Zip up all files into the deployment package
+2. Zip up all files into the Deployment Package
 ```
 cd ~/lambda
 zip -r -9 --exclude="*.pyc" ../lambda.zip ./*
 ```
-3. Upload deployment package onto S3
+3. Upload Deployment Package onto S3
 ```
 aws s3 cp ../lambda.zip s3://jakechenawstemp/
 ```
 
 ## Create Lambda Function
-1. In AWS Console, create a new Lambda Function and point to your zip in S3
-```
-```
+[Official documentation here](http://docs.aws.amazon.com/lambda/latest/dg/with-userapp-walkthrough-custom-events-upload.html).
+1. In AWS Console
+	1. If you haven't already, [create an IAM Role for Lambda](http://docs.aws.amazon.com/lambda/latest/dg/with-userapp-walkthrough-custom-events-create-iam-role.html).
+	2. Create a new Lambda Function and point to your zip in S3
+2. Or in AWS CLI
+	1. If you haven't already, [create an IAM Role for Lambda](http://docs.aws.amazon.com/lambda/latest/dg/with-userapp-walkthrough-custom-events-create-iam-role.html)
+	2. Run this CLI code
+	```
+	aws lambda create-function \
+	--region us-east-1 \
+	--function-name mnist_predictor \
+	--code S3Bucket=jakechenawstemp, S3Key=lambda.zip \ # change this to where you uploaded your zipped Deployment Package
+	--role admin_lambda \ # change this to the role you made
+	--handler lambda_function.lambda_handler \
+	--runtime python2.7 \
+	--profile adminuser 
+	```
