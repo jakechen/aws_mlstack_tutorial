@@ -3,10 +3,14 @@ Combination of blogs:
 - ["Creating a Simple “Fetch & Run” AWS Batch Job"](https://aws.amazon.com/blogs/compute/creating-a-simple-fetch-and-run-aws-batch-job/)
 - ["Deep Learning on AWS Batch"](https://aws.amazon.com/blogs/compute/deep-learning-on-aws-batch/)
 
-## Create AMI
-First, we need to create a Amazon Machine Image (AMI) that your Docker Containers will be running on top of. In our case, this machine image will need to have hooks to the GPU. We'll link to the [excellent official guide here, so no need to say more](http://docs.aws.amazon.com/batch/latest/userguide/batch-gpu-ami.html).
 
-## Create and Register Docker Image
+## Create GPU AMI and Docker Images
+### Create GPU AMI
+First, we need to create a Amazon Machine Image (AMI) that your Docker Containers will be running on top of. In our case, this machine image will need to have hooks to the GPU. We'll link to the [excellent official guide here, so no need to say more](http://docs.aws.amazon.com/batch/latest/userguide/batch-gpu-ami.html). Don't terminate this instance yet!
+
+### Create and Register Docker Image
+Now in the same EC2 instance above, we can also create the Docker Image that will be registered to ECS Repository.
+
 1. Create Dockerfile
 ```
 FROM amazonlinux
@@ -32,6 +36,7 @@ Follow these steps in AWS Console:
 	3. Fill out form fields
 	4. Follow directions out the screen
 	5. Keep a record of the Repository URI
+
 
 ## AWS Batch Setup
 1. Create Compute Environment
