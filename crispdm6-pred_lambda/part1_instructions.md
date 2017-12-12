@@ -44,15 +44,27 @@ python ~/lambda/lambda_function.py
 ## Create Deployment Packages
 1. Move packages into the same directory as your script, such as:
 ```
-cp -r ~/mxnet/lib/python2.7/site-packages/* ~/lambda/
-cp -r ~/mxnet/lib64/python2.7/site-packages/* ~/lambda/
+cd ~/lambda/
+cp -r ~/mxnet/lib/python2.7/site-packages/* .
+cp -r ~/mxnet/lib64/python2.7/site-packages/* .
 ```
-2. Zip up all files into the Deployment Package
+2. Copy in needed libraries (taken from https://ryan-cranfill.github.io/keras-aws-lambda/)
+```
+find /usr/lib64 -name "libblas.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "libgfortran.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "liblapack.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "libopenblas.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "libquadmath.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "libf77blas.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "libcblas.*" -exec cp -P {} lib/ \;
+find /usr/lib64 -name "libatlas.*" -exec cp -P {} lib/ \;
+```
+3. Zip up all files into the Deployment Package
 ```
 cd ~/lambda
 zip -r -9 --exclude="*.pyc" ../lambda.zip ./*
 ```
-3. Upload Deployment Package onto S3
+4. Upload Deployment Package onto S3
 ```
 aws s3 cp ../lambda.zip s3://jakechenawstemp/
 ```
