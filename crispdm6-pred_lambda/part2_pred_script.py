@@ -1,9 +1,17 @@
 batch_size = 5
 
+import ctypes
+import os
+for d, _, files in os.walk('lib'):
+    for f in files:
+        if f.endswith('.a') or f.endswith('.settings'):
+            continue
+        print('loading %s...' % f)
+        ctypes.cdll.LoadLibrary(os.path.join(d, f))
+        
 import mxnet as mx
 import numpy as np
 import boto3
-
 
 s3 = boto3.client('s3')
 
