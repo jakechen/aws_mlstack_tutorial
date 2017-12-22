@@ -5,20 +5,24 @@
 #
 #
 
+import mxnet as mx
+
+mnist = mx.test_utils.get_mnist()
+
 # ---------------------------------------------------------------------------- #
 # Training functions                                                           #
 # ---------------------------------------------------------------------------- #
 
 def train(
-    hyperparameters,
-    input_data_config,
-    channel_input_dirs,
-    output_data_dir,
-    model_dir,
-    num_gpus,
-    num_cpus,
-    hosts,
-    current_host,
+#    hyperparameters,
+#    input_data_config,
+#    channel_input_dirs,
+#    output_data_dir,
+#    model_dir,
+#    num_gpus,
+#    num_cpus,
+#    hosts,
+#    current_host,
     **kwargs):
 
     """
@@ -66,7 +70,60 @@ def train(
             save function. If you do not return anything (or return None),
             the save function is not called.
     """
-    pass
+
+    """
+    Begin copy/paste from tutorial part 1
+    """
+    ntrain = int(mnist['train_data'].shape[0]*0.8)
+    X_train = mnist['train_data'][:ntrain]
+    y_train = mnist['train_label'][:ntrain]
+    X_test = mnist['train_data'][ntrain:]
+    y_test = mnist['train_label'][ntrain:]
+
+    data = mx.sym.var('data')
+    # first conv layer
+    conv1 = mx.sym.Convolution(data=data, kernel=(5,5), num_filter=20)
+    tanh1 = mx.sym.Activation(data=conv1, act_type="tanh")
+    pool1 = mx.sym.Pooling(data=tanh1, pool_type="max", kernel=(2,2), stride=(2,2))
+    # second conv layer
+    conv2 = mx.sym.Convolution(data=pool1, kernel=(5,5), num_filter=50)
+    tanh2 = mx.sym.Activation(data=conv2, act_type="tanh")
+    pool2 = mx.sym.Pooling(data=tanh2, pool_type="max", kernel=(2,2), stride=(2,2))
+    # first fullc layer
+    flatten = mx.sym.flatten(data=pool2)
+    fc1 = mx.symbol.FullyConnected(data=flatten, num_hidden=500)
+    tanh3 = mx.sym.Activation(data=fc1, act_type="tanh")
+    # second fullc
+    fc2 = mx.sym.FullyConnected(data=tanh3, num_hidden=10)
+    # softmax loss
+    lenet = mx.sym.SoftmaxOutput(data=fc2, name='softmax')
+    # define training batch size
+    batch_size = 100
+
+    # create iterator around training and validation data
+    train_iter = mx.io.NDArrayIter(mnist['train_data'][:ntrain], mnist['train_label'][:ntrain], batch_size, shuffle=True)
+    val_iter = mx.io.NDArrayIter(mnist['train_data'][ntrain:], mnist['train_label'][ntrain:], batch_size)
+
+    # create a trainable module
+    # toggle this between mx.cpu() and mx.gpu() depending on if you're using ml.c-family or ml.p-family for this notebook.
+    lenet_model = mx.mod.Module(symbol=lenet, context=mx.cpu())
+    """
+    End copy/paste from part 1
+    """
+    # kvstore is used to distribute the workload to multiple processors. In this case, CPUs.
+    kvstore = 'dist_sync'
+    # mostly pasted code but added kvstore argument
+    lenet_model.fit(train_iter,
+                    eval_data=val_iter,
+                    optimizer='sgd',
+                    optimizer_params={'learning_rate':0.1},
+                    eval_metric='acc',
+                    batch_end_callback = mx.callback.Speedometer(batch_size, 100),
+                    num_epoch=10,
+                    kvstore='dist_sync'
+                   )
+    
+    return lenet
 
 def save(model, model_dir):
     """
