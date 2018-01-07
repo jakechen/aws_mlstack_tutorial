@@ -8,7 +8,7 @@ This tutorial demonstrates how to easily establish the architectural stack for d
 - Basic knowledge of Data Scient methodologies, specifically [CRISP-DM](https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining)
 
 ## Recommended Sequence
-1. Start with [sagemaker/part0_instructions.md](../sagemaker/part0_instructions.md)
+1. Start with [sagemaker/part0_instructions.md](sagemaker/part0_instructions.md)
 
 ## Recommended Sequence - Pre-Sagemaker
 1. CRISP-DM Parts 3-5, found in folder 'crispdm345-training'
