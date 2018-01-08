@@ -3,9 +3,13 @@
 # Templates for this file can be found here:
 # http://docs.aws.amazon.com/sagemaker/latest/dg/mxnet-training-inference-code-template.html
 #
+# More information can be found here:
+# https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview
 #
 
 import mxnet as mx
+import numpy as np
+import boto3
 
 mnist = mx.test_utils.get_mnist()
 
@@ -16,7 +20,7 @@ mnist = mx.test_utils.get_mnist()
 def train(
 #    hyperparameters,
 #    input_data_config,
-#    channel_input_dirs,
+    channel_input_dirs,
 #    output_data_dir,
 #    model_dir,
 #    num_gpus,
@@ -71,15 +75,32 @@ def train(
             the save function is not called.
     """
 
-    """
-    Begin copy/paste from tutorial part 1
-    """
-    ntrain = int(mnist['train_data'].shape[0]*0.8)
-    X_train = mnist['train_data'][:ntrain]
-    y_train = mnist['train_label'][:ntrain]
-    X_test = mnist['train_data'][ntrain:]
-    y_test = mnist['train_label'][ntrain:]
+    #bucket_name = 'jakechenawspublic'
+    #key_name = 'sample_data/mnist/mnist_train.csv'
 
+    s3 = boto3.client('s3')
+    s3.download_file(bucket_name, key_name, 'mnist_train.csv')
+    # load downloaded files into s3
+    fnames = glob('*.csv')
+    arrays = np.array([np.loadtxt(f, delimiter=',') for f in fnames])
+
+    """
+    Copy/paste from tutorial part 1
+    """
+    # join files into one array with shape [records, 785]
+    # 785 because each record has 28x28=784 pixels and 1 label
+    mnist_train = arrays.reshape(-1, 785)
+
+    # split record into image data and label
+    X_train = mnist_train.T[1:].T.reshape(-1,1,28,28)
+    y_train = mnist_train.T[:1].T.reshape(-1)
+
+    # wrap mxnet iterator around records
+    batch_size = 100
+    train_iter = mx.io.NDArrayIter(X_train[:-1000], y_train[:-1000], batch_size, shuffle=True)
+    val_iter = mx.io.NDArrayIter(X_train[-1000:], y_train[-1000:], batch_size)
+
+    # define network
     data = mx.sym.var('data')
     # first conv layer
     conv1 = mx.sym.Convolution(data=data, kernel=(5,5), num_filter=20)
@@ -127,31 +148,6 @@ def train(
                    )
     
     return lenet
-
-def save(model, model_dir):
-    """
-    [Optional]
-
-    Saves an Apache MXNet model after training. This function is called with the
-    return value of train, if there is one. You are free to implement this to
-    perform your own saving operation.
-
-    Amazon SageMaker provides a default save function for
-    Apache MXNet models. The default save function serializes 'Apache MXNet
-    Module <https://mxnet.incubator.apache.org/api/python/module.html>' models.
-    To rely on the default save function, omit a definition of
-    'save' from your script. The default save function is discussed in more
-    detail in the Amazon SageMaker Python SDK GitHub documentation.
-
-    If you are using the Gluon API, you should provide your own save function,
-    or save your model in the train function and let the train function
-    complete without returning anything.
-
-    Arguments:
-       - model (object): The return value from train.
-       - model_dir: The Amazon SageMaker model directory.
-    """
-    pass
 
 
 # ---------------------------------------------------------------------------- #
@@ -327,94 +323,3 @@ def output_fn(data, accept):
             and its content type.
     """
     pass
-
- 
-''' # Commented out because this tutorial is not using Gluon yet
-# ---------------------------------------------------------------------------- #
-# Request handlers for Gluon models                                            #
-# ---------------------------------------------------------------------------- #
-
-
-def input_fn(input_data, content_type):
-    """
-    [Optional]
-
-    Prepares data for transformation. Amazon SageMaker invokes your input_fn in
-    response to an InvokeEndpoint operation on an Amazon SageMaker endpoint that contains
-    this script. Amazon SageMaker passes in input data and content type from the
-    InvokeEndpoint request.
-
-    The function should return an NDArray that can be passed to the
-    predict_fn.
-
-    If you omit this function, Amazon SageMaker provides a default implementation.
-    The default input_fn converts JSON-encoded array data into an NDArray.
-    For more information about the default input_fn, see the SageMaker
-    Python SDK GitHub documentation. 
-
-    Args:
-        - input_data: The input data from the payload of the
-            InvokeEndpoint request.
-        - content_type: The content type of the request.
-
-    Returns:
-        - (NDArray): An NDArray
-    """
-    pass
-
-
-def predict_fn(block, array):
-    """
-    [Optional]
-
-    Performs prediction on an NDArray object. In response to an InvokeEndpoint request, Amazon SageMaker invokes your
-    predict_fn with the model returned by your model_fn and the result
-    of the input_fn.
-
-    The function should return an NDArray containing the prediction results.
-
-    If you omit this function, Amazon SageMaker provides a default implementation.
-    The default predict_fn call passes the array to the forward
-    method of the Gluon block, for example, block(array).
-
-    Args:
-        - block (Block): The loaded Gluon model; the result of calling
-            model_fn on this script.
-        - array (NDArray): The result of a call to input_fn in response
-            to an Amazon SageMaker InvokeEndpoint request.
-
-    Returns:
-        - (NDArray): An NDArray containing the prediction result.
-    """
-    pass
-
-
-def output_fn(ndarray, accept):
-    """
-    [Optional]
-
-    Serializes prediction results. Amazon SageMaker invokes your output_fn with
-    the NDArray returned by your predict_fn and the content type from the
-    InvokeEndpoint request's accept header.
-
-    This function should return a tuple of (transformation result, content
-    type). In most cases, the returned content type should be the same as the
-    accept content type, but it might differ; for example, when your code needs to
-    return an error response.
-
-    If you omit this function, Amazon SageMaker provides a default implementation.
-    The default output_fn converts the prediction result into a JSON-encoded
-    array data. For more information about the default input_fn, see the
-    Amazon SageMaker Python SDK GitHub documentation. 
-
-    Args:
-        - ndarray: NDArray. The result of calling predict_fn.
-        - content_type: string. The content type from the InvokeEndpoint
-            request's Accept header.
-
-    Returns:
-        - (object, string): A tuple containing the transformed result
-            and its content type
-    """
-    pass
-'''
