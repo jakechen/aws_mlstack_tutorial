@@ -7,8 +7,10 @@
 # https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview
 #
 
+import logging
 import mxnet as mx
 import numpy as np
+from glob import glob
 import boto3
 
 mnist = mx.test_utils.get_mnist()
@@ -75,17 +77,19 @@ def train(
             the save function is not called.
     """
 
-    #bucket_name = 'jakechenawspublic'
-    #key_name = 'sample_data/mnist/mnist_train.csv'
-
-    s3 = boto3.client('s3')
-    s3.download_file(bucket_name, key_name, 'mnist_train.csv')
+    #
+    # Sagemaker API automatically downloads the files when we call fit() on the Estimator
+    # We can find where these files are in the channel_input_dirs dict, which is an argument into this function.
+    # This isn't always needed (e.g. hard coded files), but is cleaner b/c fit() requires an 'input' argument
+    #
+    
     # load downloaded files into s3
-    fnames = glob('*.csv')
+    logging.info('training directory detected as: {}'.format(channel_input_dirs['train']))
+    fnames = glob('{}/*.csv'.format(channel_input_dirs['train']))
     arrays = np.array([np.loadtxt(f, delimiter=',') for f in fnames])
 
     """
-    Copy/paste from tutorial part 1
+    Begin copy/paste from tutorial part 1
     """
     # join files into one array with shape [records, 785]
     # 785 because each record has 28x28=784 pixels and 1 label
@@ -124,16 +128,18 @@ def train(
     # create iterator around training and validation data
     train_iter = mx.io.NDArrayIter(mnist['train_data'][:ntrain], mnist['train_label'][:ntrain], batch_size, shuffle=True)
     val_iter = mx.io.NDArrayIter(mnist['train_data'][ntrain:], mnist['train_label'][ntrain:], batch_size)
+    
+    """
+    End copy/paste from tutorial part 1
+    """
 
-    """
-    End copy/paste from part 1
-    """
     # create a trainable module
-    # toggle this between mx.cpu() and mx.gpu() depending on if you're using ml.c-family or ml.p-family for training.
-    context=mx.gpu()
-    # toggle this between 'local', 'device', 'dist-sync', or 'dist-device-sync' 
+    context=mx.gpu() # change to mx.gpu() if using ml.p2.xlarge
+
+    # Toggle this between 'local', 'device', 'dist-sync', or 'dist-device-sync' 
     # depending on if you're using ml.c-family or ml.p-family for training.
-    # https://mxnet.incubator.apache.org/how_to/multi_devices.html
+    #
+    # For more info: https://mxnet.incubator.apache.org/how_to/multi_devices.html
     kvstore='device'
     
     lenet_model = mx.mod.Module(symbol=lenet, context=context)
@@ -144,7 +150,7 @@ def train(
                     eval_metric='acc',
                     batch_end_callback = mx.callback.Speedometer(batch_size, 100),
                     num_epoch=10,
-                    kvstore=kvstore
+                    kvstore=kvstore # added kvstore argument
                    )
     
     return lenet
