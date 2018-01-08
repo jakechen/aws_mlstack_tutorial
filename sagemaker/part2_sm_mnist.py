@@ -110,9 +110,8 @@ def train(
     """
     End copy/paste from part 1
     """
-    # kvstore is used to distribute the workload to multiple processors. In this case, CPUs.
-    kvstore = 'dist_sync'
-    # mostly pasted code but added kvstore argument
+    # added kvstore argument, for more on what this does, see here:
+    # https://mxnet.incubator.apache.org/how_to/multi_devices.html
     lenet_model.fit(train_iter,
                     eval_data=val_iter,
                     optimizer='sgd',

@@ -8,11 +8,9 @@ Please open [part1\_model\_research.ipynb](./part1_model_research.ipynb) to begi
 
 
 ## 2. Model Development for SageMaker
-Place model definition and training code into this [Sagemaker .py template](http://docs.aws.amazon.com/sagemaker/latest/dg/mxnet-training-inference-code-template.html).
+Refactor the training code from [part1\_model\_research.ipynb](./part1_model_research.ipynb) into this [Sagemaker .py template](http://docs.aws.amazon.com/sagemaker/latest/dg/mxnet-training-inference-code-template.html).
 
-Refactor the training code from [part1\_model\_research.ipynb](./part1_model_research.ipynb) into this template.
-
-The primary change we will be making is to use MXNet's distributed training capabilities. For details, refer to [this guide](https://mxnet.incubator.apache.org/how_to/multi_devices.html).
+Since the code is already working, the primary change we will be making is to use MXNet's distributed training capabilities. For details, refer to [this guide](https://mxnet.incubator.apache.org/how_to/multi_devices.html).
 
 Please see [part2\_sm\_mnist.py](./part2_sm_mnist.py) for a completed version.
 
