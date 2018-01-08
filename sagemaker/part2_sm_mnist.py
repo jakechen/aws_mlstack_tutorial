@@ -104,14 +104,18 @@ def train(
     train_iter = mx.io.NDArrayIter(mnist['train_data'][:ntrain], mnist['train_label'][:ntrain], batch_size, shuffle=True)
     val_iter = mx.io.NDArrayIter(mnist['train_data'][ntrain:], mnist['train_label'][ntrain:], batch_size)
 
-    # create a trainable module
-    # toggle this between mx.cpu() and mx.gpu() depending on if you're using ml.c-family or ml.p-family for this notebook.
-    lenet_model = mx.mod.Module(symbol=lenet, context=mx.cpu())
     """
     End copy/paste from part 1
     """
-    # added kvstore argument, for more on what this does, see here:
+    # create a trainable module
+    # toggle this between mx.cpu() and mx.gpu() depending on if you're using ml.c-family or ml.p-family for training.
+    context=mx.gpu()
+    # toggle this between 'local', 'device', 'dist-sync', or 'dist-device-sync' 
+    # depending on if you're using ml.c-family or ml.p-family for training.
     # https://mxnet.incubator.apache.org/how_to/multi_devices.html
+    kvstore='device'
+    
+    lenet_model = mx.mod.Module(symbol=lenet, context=context)
     lenet_model.fit(train_iter,
                     eval_data=val_iter,
                     optimizer='sgd',
@@ -119,7 +123,7 @@ def train(
                     eval_metric='acc',
                     batch_end_callback = mx.callback.Speedometer(batch_size, 100),
                     num_epoch=10,
-                    kvstore='dist_sync'
+                    kvstore=kvstore
                    )
     
     return lenet
