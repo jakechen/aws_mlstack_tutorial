@@ -122,13 +122,7 @@ def train(
     fc2 = mx.sym.FullyConnected(data=tanh3, num_hidden=10)
     # softmax loss
     lenet = mx.sym.SoftmaxOutput(data=fc2, name='softmax')
-    # define training batch size
-    batch_size = 100
 
-    # create iterator around training and validation data
-    train_iter = mx.io.NDArrayIter(mnist['train_data'][:ntrain], mnist['train_label'][:ntrain], batch_size, shuffle=True)
-    val_iter = mx.io.NDArrayIter(mnist['train_data'][ntrain:], mnist['train_label'][ntrain:], batch_size)
-    
     """
     End copy/paste from tutorial part 1
     """
@@ -153,7 +147,7 @@ def train(
                     kvstore=kvstore # added kvstore argument
                    )
     
-    return lenet
+    return lenet_model
 
 
 # ---------------------------------------------------------------------------- #
