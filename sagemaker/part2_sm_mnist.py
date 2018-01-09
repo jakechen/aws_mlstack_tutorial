@@ -143,7 +143,7 @@ def train(
                     optimizer_params={'learning_rate':0.1},
                     eval_metric='acc',
                     batch_end_callback = mx.callback.Speedometer(batch_size, 100),
-                    num_epoch=10,
+                    num_epoch=1,
                     kvstore=kvstore # added kvstore argument
                    )
     
