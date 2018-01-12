@@ -7,19 +7,57 @@
 # https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview
 #
 
+
+# https://github.com/aws/sagemaker-python-sdk#preparing-the-mxnet-training-script
 import logging
 import mxnet as mx
 import numpy as np
 from glob import glob
-import boto3
-
-mnist = mx.test_utils.get_mnist()
 
 # ---------------------------------------------------------------------------- #
 # Training functions                                                           #
 # ---------------------------------------------------------------------------- #
+def train(channel_input_dirs, **kwargs):
+    import mxnet as mx
+    mnist = mx.test_utils.get_mnist()
 
-def train(
+    batch_size = 100
+    train_iter = mx.io.NDArrayIter(mnist['train_data'], mnist['train_label'], batch_size, shuffle=True)
+    val_iter = mx.io.NDArrayIter(mnist['test_data'], mnist['test_label'], batch_size)
+
+    data = mx.sym.var('data')
+    # first conv layer
+    conv1 = mx.sym.Convolution(data=data, kernel=(5,5), num_filter=20)
+    tanh1 = mx.sym.Activation(data=conv1, act_type="tanh")
+    pool1 = mx.sym.Pooling(data=tanh1, pool_type="max", kernel=(2,2), stride=(2,2))
+    # second conv layer
+    conv2 = mx.sym.Convolution(data=pool1, kernel=(5,5), num_filter=50)
+    tanh2 = mx.sym.Activation(data=conv2, act_type="tanh")
+    pool2 = mx.sym.Pooling(data=tanh2, pool_type="max", kernel=(2,2), stride=(2,2))
+    # first fullc layer
+    flatten = mx.sym.flatten(data=pool2)
+    fc1 = mx.symbol.FullyConnected(data=flatten, num_hidden=500)
+    tanh3 = mx.sym.Activation(data=fc1, act_type="tanh")
+    # second fullc
+    fc2 = mx.sym.FullyConnected(data=tanh3, num_hidden=10)
+    # softmax loss
+    lenet = mx.sym.SoftmaxOutput(data=fc2, name='softmax')
+
+    # create a trainable module on GPU 0
+    lenet_model = mx.mod.Module(symbol=lenet, context=mx.gpu())
+    # train with the same
+    lenet_model.fit(train_iter,
+                    eval_data=val_iter,
+                    optimizer='sgd',
+                    optimizer_params={'learning_rate':0.1},
+                    eval_metric='acc',
+                    batch_end_callback = mx.callback.Speedometer(batch_size, 100),
+                    num_epoch=10)
+
+    return lenet_model
+
+
+def train_old(
 #    hyperparameters,
 #    input_data_config,
     channel_input_dirs,
@@ -84,26 +122,29 @@ def train(
     #
     
     # load downloaded files into s3
-    logging.info('training directory detected as: {}'.format(channel_input_dirs['train']))
-    fnames = glob('{}/*.csv'.format(channel_input_dirs['train']))
-    arrays = np.array([np.loadtxt(f, delimiter=',') for f in fnames])
+    logging.info('training images directory detected as: {}'.format(channel_input_dirs['images']))
+    logging.info('training labels directory detected as: {}'.format(channel_input_dirs['labels']))
+    
+    # load downloaded files into numpy arrays
+    f_name = channel_input_dirs['images']+'/images.csv'
+    X_arrays = np.loadtxt(f_name, delimiter=',')
 
+    f_name = channel_input_dirs['labels']+'/labels.csv'
+    y_arrays = np.loadtxt(f_name, delimiter=',')
+    
+    # reshape into requisite shape for NN
+    X_train = mx.nd.array(X_arrays.reshape(-1, 1, 28, 28))
+    y_train = mx.nd.array(y_arrays.reshape(-1)).one_hot(10)
+    logging.info('X_train.shape: {}'.format(X_train.shape))
+    logging.info('y_train.shape: {}'.format(y_train.shape))
+    
+    # wrap mxnet iterator around records
+    batch_size = 100
+    train_iter = mx.io.NDArrayIter(X_train, y_train, batch_size, shuffle=True)
+    
     """
     Begin copy/paste from tutorial part 1
     """
-    # join files into one array with shape [records, 785]
-    # 785 because each record has 28x28=784 pixels and 1 label
-    mnist_train = arrays.reshape(-1, 785)
-
-    # split record into image data and label
-    X_train = mnist_train.T[1:].T.reshape(-1,1,28,28)
-    y_train = mnist_train.T[:1].T.reshape(-1)
-
-    # wrap mxnet iterator around records
-    batch_size = 100
-    train_iter = mx.io.NDArrayIter(X_train[:-1000], y_train[:-1000], batch_size, shuffle=True)
-    val_iter = mx.io.NDArrayIter(X_train[-1000:], y_train[-1000:], batch_size)
-
     # define network
     data = mx.sym.var('data')
     # first conv layer
@@ -138,188 +179,10 @@ def train(
     
     lenet_model = mx.mod.Module(symbol=lenet, context=context)
     lenet_model.fit(train_iter,
-                    eval_data=val_iter,
                     optimizer='sgd',
                     optimizer_params={'learning_rate':0.1},
-                    eval_metric='acc',
-                    batch_end_callback = mx.callback.Speedometer(batch_size, 100),
-                    num_epoch=1,
+                    num_epoch=5,
                     kvstore=kvstore # added kvstore argument
                    )
     
     return lenet_model
-
-
-# ---------------------------------------------------------------------------- #
-# Hosting functions                                                            #
-# ---------------------------------------------------------------------------- #
-
-
-def model_fn(model_dir):
-
-    """
-    [Optional]
-
-    Loads a model from disk, reading from model_dir. Called once by each
-    inference service worker when it is started.
-
-    If you want to take advantage of Amazon SageMaker's default request handling
-    functions, the returned object should be a `Gluon Block
-    <https://mxnet.incubator.apache.org/api/python/gluon/gluon.html#mxnet.gluon.Block>
-    or MXNet `Module <https://mxnet.incubator.apache.org/api/python/module.html>`,
-     described below. If you are providing your own transform_fn,
-    then your model_fn can return anything that is compatible with your
-     transform_fn.
-
-    Amazon SageMaker provides a default model_fn that works with the serialization
-    format used by the Amazon SageMaker default save function, discussed above. If
-    you saved your model using the default save function, you do not need to
-    provide a model_fn in your hosting script.
-
-    Args:
-        - model_dir: The Amazon SageMaker model directory.
-
-    Returns:
-        - (object): Optional. The deserialized model.
-    """
-    pass
-
-
-def transform_fn(model, input_data, content_type, accept):
-    """
-    [Optional]
-
-    Transforms input data into a prediction result. Amazon SageMaker invokes your
-    transform_fn in response to an InvokeEndpoint operation on an Amazon SageMaker
-    endpoint containing this script. Amazon SageMaker passes in the model, previously
-    loaded with model_fn, along with the input data, request content type, and accept content type from the InvokeEndpoint request.
-
-    The input data is expected to have the given content_type.
-
-    The output returned should have the given accept content type.
-
-    This function should return a tuple of (transformation result, content
-    type). In most cases, the returned content type should be the same as the
-    accept content type, but it might differ. For example, when your code needs to
-    return an error response.
-
-    If you provide a transform_fn in your hosting script, it will be used
-    to handle the entire request. You don't need to provide any other
-    request handling functions (input_fn, predict_fn, or output_fn).
-    If you do provide them, they will be ignored.
-
-    Amazon SageMaker provides default transform_fn implementations that work with
-    Gluon and Module models. These support JSON input and output, and for Module
-    models, also CSV. To use the default transform_fn, provide a
-    hosting script without a transform_fn or any other request handling
-    functions. For more information about the default transform_fn,
-    see the SageMaker Python SDK GitHub documentation. 
-
-    Args:
-        - input_data: The input data from the payload of the
-            InvokeEndpoint request.
-        - content_type: The content type of the request.
-        - accept: The content type from the request's Accept header.
-
-    Returns:
-        - (object, string): A tuple containing the transformed result
-            and its content type
-    """
-    pass
-
-
-# ---------------------------------------------------------------------------- #
-# Request handlers for Module models                                           #
-# ---------------------------------------------------------------------------- #
-
-def input_fn(model, input_data, content_type):
-    """
-    [Optional]
-
-    Prepares data for transformation. Amazon SageMaker invokes your input_fn in
-    response to an InvokeEndpoint operation on an Amazon SageMaker endpoint that contains
-    this script. Amazon SageMaker passes in the MXNet Module returned by your
-    model_fn, along with the input data and content type from the
-    InvokeEndpoint request.
-
-    The function should return an NDArray. Amazon SageMaker wraps the returned
-    NDArray in a DataIter with a batch size that matches your model, and then
-    passes it to your predict_fn.
-
-    If you omit this function, Amazon SageMaker provides a default implementation.
-    The default input_fn converts a JSON or CSV-encoded array data into an
-    NDArray. For more information about the default input_fn, see the
-    Amazon SageMaker Python SDK GitHub documentation. 
-
-    Args:
-        - model: A Module; the result of calling model_fn on this script.
-        - input_data: The input data from the payload of the
-            InvokeEndpoint request.
-        - content_type: The content type of the request.
-
-    Returns:
-        - (NDArray): an NDArray
-    """
-    pass
-
-
-def predict_fn(module, data):
-    """
-    [Optional]
-
-    Performs prediction on an MXNet DataIter object. In response to an
-    InvokeEndpoint request, Amazon SageMaker invokes your
-    predict_fn with the model returned by your model_fn and DataIter
-    that contains the result of the input_fn.
-
-    The function should return a list of NDArray or a list of list of NDArray
-    containing the prediction results. For more information, see the MXNet Module API
-    <https://mxnet.incubator.apache.org/api/python/module.html#mxnet.module.BaseModule.predict>.
-
-    If you omit this function, Amazon SageMaker provides a default implementation.
-    The default predict_fn calls module.predict on the input
-    data and returns the result.
-
-    Args:
-        - module (Module): The loaded MXNet Module; the result of calling
-            model_fn on this script.
-        - data (DataIter): A DataIter containing the results of a
-            call to input_fn.
-
-    Returns:
-        - (object): A list of NDArray or list of list of NDArray
-            containing the prediction results.
-    """
-    pass
-
-
-def output_fn(data, accept):
-    """
-    [Optional]
-
-    Serializes prediction results. Amazon SageMaker invokes your output_fn with the
-    results of predict_fn and the content type from the InvokeEndpoint
-    request's accept header.
-
-    This function should return a tuple of (transformation result, content
-    type). In most cases, the returned content type should be the same as the
-    accept content type, but it might differ. For example, when your code needs to
-    return an error response.
-
-    If you omit this function, Amazon SageMaker provides a default implementation.
-    The default output_fn converts the prediction result into JSON or CSV-
-    encoded array data, depending on the value of the accept header. For more
-    information about the default input_fn, see the Amazon SageMaker Python SDK
-    GitHub documentation. 
-
-    Args:
-        - data: A list of NDArray or list of list of NDArray. The result of
-            calling predict_fn.
-        - content_type: A string. The content type from the InvokeEndpoint
-            request's Accept header.
-
-    Returns:
-        - (object, string): A tuple containing the transformed result
-            and its content type.
-    """
-    pass
