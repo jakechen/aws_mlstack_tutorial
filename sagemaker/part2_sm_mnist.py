@@ -1,6 +1,6 @@
 #
 #
-# Templates for this file can be found here:
+# Templates for required and optional functions for this file can be found here:
 # http://docs.aws.amazon.com/sagemaker/latest/dg/mxnet-training-inference-code-template.html
 #
 # More information can be found here:
@@ -17,7 +17,7 @@ from glob import glob
 # ---------------------------------------------------------------------------- #
 # Training functions                                                           #
 # ---------------------------------------------------------------------------- #
-def train(channel_input_dirs, **kwargs):
+def train_working(channel_input_dirs, **kwargs):
     import mxnet as mx
     mnist = mx.test_utils.get_mnist()
 
@@ -57,16 +57,16 @@ def train(channel_input_dirs, **kwargs):
     return lenet_model
 
 
-def train_old(
-#    hyperparameters,
-#    input_data_config,
+def train(
+#    hyperparameters,    # not used in tutorial
+#    input_data_config,  # not used in tutorial
     channel_input_dirs,
-#    output_data_dir,
-#    model_dir,
-#    num_gpus,
-#    num_cpus,
-#    hosts,
-#    current_host,
+#    output_data_dir,    # not used in tutorial
+#    model_dir,          # not used in tutorial
+#    num_gpus,           # not used in tutorial
+#    num_cpus,           # not used in tutorial
+#    hosts,              # not used in tutorial
+#    current_host,       # not used in tutorial
     **kwargs):
 
     """
@@ -133,8 +133,8 @@ def train_old(
     y_arrays = np.loadtxt(f_name, delimiter=',')
     
     # reshape into requisite shape for NN
-    X_train = mx.nd.array(X_arrays.reshape(-1, 1, 28, 28))
-    y_train = mx.nd.array(y_arrays.reshape(-1)).one_hot(10)
+    X_train = X_arrays.reshape(-1, 1, 28, 28)
+    y_train = y_arrays.reshape(-1)
     logging.info('X_train.shape: {}'.format(X_train.shape))
     logging.info('y_train.shape: {}'.format(y_train.shape))
     
