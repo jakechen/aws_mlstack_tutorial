@@ -17,57 +17,7 @@ from glob import glob
 # ---------------------------------------------------------------------------- #
 # Training functions                                                           #
 # ---------------------------------------------------------------------------- #
-def train_working(channel_input_dirs, **kwargs):
-    import mxnet as mx
-    mnist = mx.test_utils.get_mnist()
-
-    batch_size = 100
-    train_iter = mx.io.NDArrayIter(mnist['train_data'], mnist['train_label'], batch_size, shuffle=True)
-    val_iter = mx.io.NDArrayIter(mnist['test_data'], mnist['test_label'], batch_size)
-
-    data = mx.sym.var('data')
-    # first conv layer
-    conv1 = mx.sym.Convolution(data=data, kernel=(5,5), num_filter=20)
-    tanh1 = mx.sym.Activation(data=conv1, act_type="tanh")
-    pool1 = mx.sym.Pooling(data=tanh1, pool_type="max", kernel=(2,2), stride=(2,2))
-    # second conv layer
-    conv2 = mx.sym.Convolution(data=pool1, kernel=(5,5), num_filter=50)
-    tanh2 = mx.sym.Activation(data=conv2, act_type="tanh")
-    pool2 = mx.sym.Pooling(data=tanh2, pool_type="max", kernel=(2,2), stride=(2,2))
-    # first fullc layer
-    flatten = mx.sym.flatten(data=pool2)
-    fc1 = mx.symbol.FullyConnected(data=flatten, num_hidden=500)
-    tanh3 = mx.sym.Activation(data=fc1, act_type="tanh")
-    # second fullc
-    fc2 = mx.sym.FullyConnected(data=tanh3, num_hidden=10)
-    # softmax loss
-    lenet = mx.sym.SoftmaxOutput(data=fc2, name='softmax')
-
-    # create a trainable module on GPU 0
-    lenet_model = mx.mod.Module(symbol=lenet, context=mx.gpu())
-    # train with the same
-    lenet_model.fit(train_iter,
-                    eval_data=val_iter,
-                    optimizer='sgd',
-                    optimizer_params={'learning_rate':0.1},
-                    eval_metric='acc',
-                    batch_end_callback = mx.callback.Speedometer(batch_size, 100),
-                    num_epoch=10)
-
-    return lenet_model
-
-
-def train(
-#    hyperparameters,    # not used in tutorial
-#    input_data_config,  # not used in tutorial
-    channel_input_dirs,
-#    output_data_dir,    # not used in tutorial
-#    model_dir,          # not used in tutorial
-#    num_gpus,           # not used in tutorial
-#    num_cpus,           # not used in tutorial
-#    hosts,              # not used in tutorial
-#    current_host,       # not used in tutorial
-    **kwargs):
+def train(channel_input_dirs, **kwargs):
 
     """
     [Required]
