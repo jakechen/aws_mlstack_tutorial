@@ -13,9 +13,9 @@ This tutorial demonstrates how to establish the architectural stack for training
 1. Start with [part0_instructions.md](sagemaker/part0_instructions.md), found in folder ['sagemaker'](sagemaker/)
 
 ### 2. Custom Process with EC2, Lambda, and Batch
-1. CRISP-DM Parts 3-5, found in folder 'ec2-lambda-batch/crispdm345-training'
-2. CRISP-DM 6 on AWS Lambda, found in folder 'ec2-lambda-batch/crispdm6-pred-lambda'
-3. CRISP-DM 6 on AWS Batch, found in folder 'ec2-lambda-batch/crispdm6-pred-batch'
+1. CRISP-DM Parts 3-5, found in folder ['ec2-lambda-batch/crispdm345-training']('ec2-lambda-batch/crispdm345-training')
+2. CRISP-DM 6 on AWS Lambda, found in folder ['ec2-lambda-batch/crispdm6-pred-lambda']('ec2-lambda-batch/crispdm6-pred-lambda')
+3. CRISP-DM 6 on AWS Batch, found in folder ['ec2-lambda-batch/crispdm6-pred-batch']('ec2-lambda-batch/crispdm6-pred-batch)'
 
 
 ## Details
