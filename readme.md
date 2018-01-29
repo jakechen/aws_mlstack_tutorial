@@ -7,7 +7,8 @@ This tutorial demonstrates how to establish the architectural stack for training
 - Basic experience with Python
 - Basic knowledge of Data Scient methodologies, specifically [CRISP-DM](https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining)
 
-## Recommended Sequence - [Sagemaker](sagemaker/)
+
+## Recommended Sequence 
 ### 1. Managed process using AWS Sagemaker
 1. Start with [part0_instructions.md](sagemaker/part0_instructions.md), found in folder ['sagemaker'](sagemaker/)
 
